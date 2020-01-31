@@ -16,6 +16,7 @@ import android.widget.Toast;
 
 public class GameOver extends AppCompatActivity {
     Button btn_back;
+
 //    ActivityManager manager=(ActivityManager) context
 //            .getSystemService(Context.ACTIVITY_SERVICE);
 

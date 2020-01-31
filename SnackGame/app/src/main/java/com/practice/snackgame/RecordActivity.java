@@ -16,6 +16,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 public class RecordActivity extends AppCompatActivity {
     ArrayList<Record> datas=new ArrayList<>();
@@ -26,8 +27,9 @@ public class RecordActivity extends AppCompatActivity {
     private int Direction;
     private TableLayout table_pick;
     private int pickPosition;
+    private Random rnd=new Random();
 //    private SharedPreferences SP;//控制要存取的SP
-    SharedPreferences SP[]=new SharedPreferences[3];
+    static SharedPreferences SP[]=new SharedPreferences[3];
     private RecordAdapter adapter;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,18 +38,21 @@ public class RecordActivity extends AppCompatActivity {
         bundle=getIntent().getExtras();
         Name=bundle.getString("Name");
         Score=bundle.getString("Score");
-        Snack=bundle.getString("Snack");
         Coin=bundle.getString("Coin");
+        Snack=bundle.getString("Snack");
         Direction=bundle.getInt("Direction");
 
 
         for(int i=0;i<SP.length;i++){
             SP[i]=getSharedPreferences("GR"+i,MODE_PRIVATE);
-            String name = SP[i].getString("Name","null");
+            String name = SP[i].getString("Name","PlayerName");
             String record=SP[i].getString("Record","0");
-            String snack=SP[i].getString("Snack","0/1;1/1;2/1;3/1;4/1;5/1");
-            String coin=SP[i].getString("Coin","15/15");
-            int direction=SP[i].getInt("Direction",0);
+            String snack=SP[i].getString("Snack","1/1;2/1;3/1;4/1;5/1");
+            int x=1+rnd.nextInt(15);
+            int y=1+rnd.nextInt(15);
+            String coin=SP[i].getString("Coin",x+"/"+y);
+            Log.d("coinInit",coin);
+            int direction=SP[i].getInt("Direction",1);//預設1為向右
             datas.add(new Record(name,record,snack,coin,direction));
         }
 
@@ -98,7 +103,7 @@ public class RecordActivity extends AppCompatActivity {
                             load();
                             MainActivity.view.invalidate();
                             startActivity(i);
-                            //finish();
+                            finish();
                         }
                             break;
 //                    case R.id.RecyclerView:
@@ -120,17 +125,17 @@ public class RecordActivity extends AppCompatActivity {
         r.setSnack(Snack);
         r.setFaceDirection(Direction);
 
-        String name,record,coinString,snackString;
+        String name,score,coinString,snackString;
         int direction;
         name=r.getPlayerName();
-        record=r.getPlayerScore();
+        score=r.getPlayerScore();
         direction=r.getFaceDirection();
         coinString=r.getCoinPoint();
         snackString=r.getSnack();
 
         SP[pickPosition].edit()
                 .putString("Name", name)//紀錄玩家名稱
-                .putString("Record", record)//紀錄目前分數
+                .putString("Record", score)//紀錄目前分數
                 .putString("Coin", coinString)//紀錄目前金幣位置
                 .putString("Snack", snackString)//紀錄蛇身
                 .putInt("Direction",direction)
@@ -141,22 +146,30 @@ public class RecordActivity extends AppCompatActivity {
      }
     private void load(){
         Record r=datas.get(pickPosition);
+
         MainActivity.Name=r.getPlayerName();
-        MainActivity.Score=r.getPlayerScore();
+        MainActivity.PlayerName.setText(r.getPlayerName());
+        MainActivity.count=Integer.parseInt(r.getPlayerScore());
+
+        MainActivity.countText.setText(r.getPlayerScore());
         String coin[]=r.getCoinPoint().split("/");
         //載入金幣
         MainActivity.map[MainActivity.MoneyPoint.getPointY()][MainActivity.MoneyPoint.getPointX()]=0;
+
         MainActivity.MoneyPoint.setPointX(Integer.parseInt(coin[0]));
-        MainActivity.MoneyPoint.setPointX(Integer.parseInt(coin[1]));
+        MainActivity.MoneyPoint.setPointY(Integer.parseInt(coin[1]));
+        Log.d("Money",MainActivity.MoneyPoint.getPointX()+"/"+MainActivity.MoneyPoint.getPointY());
         MainActivity.map[MainActivity.MoneyPoint.getPointY()][MainActivity.MoneyPoint.getPointX()]=2;
         //載入方向
-        MainActivity.Direction=r.getFaceDirection();
+        MainActivity.DIRECTION=r.getFaceDirection();
+        Log.d("LoadDirection",String.valueOf(r.getFaceDirection()));
         //載入蛇
-        String snack[]=r.getSnack().split(";");
         MainActivity.SB.clear();
+        String snack[]=r.getSnack().split(";");
         for(String s1:snack){
             String s2[]=s1.split("/");
             SnackBody snackBody=new SnackBody(Integer.parseInt(s2[0]),Integer.parseInt(s2[1]));
+            Log.d("snack",snackBody.getPointX()+"/"+snackBody.getPointY());
             MainActivity.SB.add(snackBody);}
         if(MainActivity.PressNow!=null) {MainActivity.PressNow.setBackgroundTintMode(PorterDuff.Mode.MULTIPLY);}
             switch (MainActivity.DIRECTION){

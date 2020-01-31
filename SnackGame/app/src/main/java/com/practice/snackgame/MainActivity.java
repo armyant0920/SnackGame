@@ -43,21 +43,22 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
     ActionBar actionBar;
 
     final int GS=50,row=17,column=17;//撇除牆壁,實際可動範圍15*15=225
-    int count=0,speed=500;
+    public static int count=0,speed=500;
     SeekBar seekBar;
-    TextView countText,PlayerName;
+    SharedPreferences SP;
     Bitmap wilsion,money;
     Random rnd=new Random();
     String PN;
     Paint p=new Paint();
     Boolean run=false,alive=true,allowChange=true;
 
-    private String Record;
+    private String SL;
     //為了方便控制記錄檔,宣告以下靜態變數(static)
     //又為了讓另一個Activity可以直接存取以下變數,必須宣告為public,
+        public static TextView countText,PlayerName;
         public static DrawView view;
-        public static String Name, Score, Coin, Snack;
-        public static int Direction;
+        public static String Name,Coin, Snack;
+
         public static SnackBody MoneyPoint;
         public static ArrayList<SnackBody> SB;
         public static Button PressNow;
@@ -118,6 +119,7 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
         super.onResume();
         view.invalidate();
         mMediaPlayer = new MediaPlayer();
+        mMediaPlayer.setLooping(true);
         Log.d("onResume","onResume");
 
         try {
@@ -246,20 +248,16 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
         txt_record=(TextView)recordlist.findViewById(R.id.txt_score);
 
         //從SharedPreferences抓出上一次存過的資料
-        txt_name.setText(getSharedPreferences("GR",MODE_PRIVATE).getString("Name","尚無資料"));
-        txt_record.setText(getSharedPreferences("GR",MODE_PRIVATE).getString("Record","尚無資料"));
+        txt_name.setText(getSharedPreferences("GR",MODE_PRIVATE).getString("Name","PlayerName"));
+        txt_record.setText(getSharedPreferences("GR",MODE_PRIVATE).getString("Record","0"));
 
         recordlist.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                   // SharedPreferences SP=getSharedPreferences("GR",MODE_PRIVATE);
-                if(Record=="save") {//如果目前是存檔動作,就把這個紀錄檔的文字覆蓋掉
+                if(SL=="save") {//如果目前是存檔動作,就把這個紀錄檔的文字覆蓋掉
                     txt_name.setText(PN);
                     txt_record.setText(String.valueOf(count));
-//                    txt_name.setText(String.valueOf(PlayerName.getText()));
-//                    txt_record.setText(String.valueOf(count));
-
                     CoinString = MoneyPoint.getPointX() + "/" +MoneyPoint.getPointY();
                     Log.d("CoinPoint", CoinString);
                     String test[] = CoinString.split(";");
@@ -273,13 +271,13 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
                     }
                     Log.d("SNACK", SnackString);
                 }
-                else if(Record=="load"){//
+                else if(SL=="load"){//
 
                 }
             }
         });
 
-        final AlertDialog Dialog=new AlertDialog.Builder(MainActivity.this)
+        new AlertDialog.Builder(MainActivity.this)
                 .setTitle("選擇紀錄")
                 .setView(recordlist)
                 .setPositiveButton("OK", new DialogInterface.OnClickListener() {
@@ -288,8 +286,8 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
 
                         String name = txt_name.getText().toString();
                         String record=txt_record.getText().toString();
-                        SharedPreferences SP = getSharedPreferences("GR", MODE_PRIVATE);
-                        if(Record=="save") {
+
+                        if(SL=="save") {
                             if (TextUtils.isEmpty(name) || TextUtils.isEmpty(record)) {
                                 Toast.makeText(getApplicationContext(), "資料不全", Toast.LENGTH_SHORT).show();
                             } else {
@@ -304,8 +302,8 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
                                         .commit();
 
                             }
-                        }else if(Record=="load"){
-                            PN=SP.getString("Name","null");
+                        }else if(SL=="load"){
+                            PN=SP.getString("Name","PlayerName");
 
                             PlayerName.setText(PN);
                             count=Integer.parseInt(SP.getString("Record","0"));
@@ -318,9 +316,9 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
                             Log.d("CoinX",String.valueOf(MoneyPoint.getPointX()));
                             Log.d("CoinY",String.valueOf(MoneyPoint.getPointY()));
                             map[MoneyPoint.getPointY()][MoneyPoint.getPointX()]=2;
-                            SnackString = SP.getString("Snack","0/1;1/1;2/1;3/1;4/1;5/1");
+                            SnackString = SP.getString("Snack","1/1;2/1;3/1;4/1;5/1");
                             String snack[]=SnackString.split(";");
-                            DIRECTION=SP.getInt("Direction",0);
+                            DIRECTION=SP.getInt("Direction",1);
                             if(PressNow!=null){PressNow.setBackgroundTintMode(PorterDuff.Mode.MULTIPLY);}
                                 switch (DIRECTION){
                                     case 0:PressNow=PressUP;
@@ -388,35 +386,34 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
 //                    SP.edit().putString("Name",name)
 //                            .commit();
                     Pause();
-                    Record = "save";
+                    SL = "save";
                     Record();
                     break;
                 case R.id.btn_load:
                     Pause();
-                    Record = "load";
+                    SL = "load";
                     Record();
                     break;
                 case R.id.TEST:
-                   Pause();
-//                    mMediaPlayer.stop();
+                     Pause();
                     mMediaPlayer.release();
                     mbIsInitialised = true;
 
                     Name = PN;
                     Log.d("Name",Name);
-                    Score = String.valueOf(count);
+
                     Coin = MoneyPoint.getPointX() + "/" + MoneyPoint.getPointY();
                     Snack = "";
-                    Direction = DIRECTION;
+
                     for (SnackBody s : SB) {
                         Snack += s.getPointX() + "/" + s.getPointY() + ";";
                     }
                     Intent i = new Intent(getApplicationContext(), RecordActivity.class);
                     i.putExtra("Name", Name);
-                    i.putExtra("Score", Score);
+                    i.putExtra("Score", String.valueOf(count));
                     i.putExtra("Coin", Coin);
                     i.putExtra("Snack", Snack);
-                    i.putExtra("Direction", Direction);
+                    i.putExtra("Direction", DIRECTION);
                     //mMediaPlayer.stop();
                     startActivity(i);
                     break;
@@ -436,7 +433,6 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
                     mMediaPlayer.pause();
                     }
                     break;
-
             }
         }
     };
@@ -444,9 +440,6 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
             PressPause.setBackgroundResource(android.R.drawable.ic_media_play);
             run=false;
             state=pause;
-//            if(mMediaPlayer.isPlaying())
-//            {mMediaPlayer.pause();}
-
     }
     //方向與按鈕事件設定
     View.OnClickListener ArrowListener=new View.OnClickListener() {
@@ -483,8 +476,8 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
                     PressNow=PressDOWN;
                     PressNow.setBackgroundTintMode(PorterDuff.Mode.SRC_ATOP);//OVERALY或XOR也不錯
                     break;
-
             }
+
             Log.d("DIRECTION",String.valueOf(DIRECTION));
         }
     };
@@ -492,29 +485,32 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
     private void init() {
         //VL=(LinearLayout) findViewById(R.id.VL);
         PlayerName = (TextView) findViewById(R.id.PlayerName);
-        SharedPreferences SP[]=new SharedPreferences[3];
-        SPRecord=new ArrayList<>();
-        for(int i=0;i<3;i++){
-            SP[i]=getSharedPreferences("GR"+i,MODE_PRIVATE);
-            String name = SP[i].getString("Name","PlayerName");
-            String record=SP[i].getString("Record","0");
-            String snack=SP[i].getString("Record","0/1;1/1;2/1;3/1;4/1;5/1");
-            String coin=SP[i].getString("Coin",1+rnd.nextInt(15)+"/"+1+rnd.nextInt(15));
-            int direction=SP[i].getInt("Direction",1);//預設1為向右
-
-            Record R=new Record(name,record,snack,coin,direction);
-            SPRecord.add(R);
+        SP=getSharedPreferences("GR",MODE_PRIVATE);
+        {//        SharedPreferences SP[]=new SharedPreferences[3];
+//        SPRecord=new ArrayList<>();
+//        for(int i=0;i<3;i++){
+//            SP[i]=getSharedPreferences("GR"+i,MODE_PRIVATE);
+//            String name = SP[i].getString("Name","PlayerName");
+//            String record=SP[i].getString("Record","0");
+//            String snack=SP[i].getString("Snack","1/1;2/1;3/1;4/1;5/1");
+//            String coin=SP[i].getString("Coin",1+rnd.nextInt(15)+"/"+1+rnd.nextInt(15));
+//            int direction=SP[i].getInt("Direction",1);//預設1為向右
+//
+//            Record R=new Record(name,record,snack,coin,direction);
+//            SPRecord.add(R);
+//        }
         }
-        SharedPreferences SP0 = getSharedPreferences("GR", MODE_PRIVATE);
-//        PN = SP0.getString("Name", "PlayerName");
-        CoinString = SP0.getString("Coin", 1+rnd.nextInt(15)+"/"+1+rnd.nextInt(15));
-        PN="PlayerName";
 
+//        PN = SP0.getString("Name", "PlayerName");
+        int x,y;
+        x=1+rnd.nextInt(15);
+        y=1+rnd.nextInt(15);
+        CoinString = SP.getString("Coin", x+"/"+y);
+        PN=SP.getString("Name","PlayerName");
         PlayerName.setText(PN);
         countText = (TextView) findViewById(R.id.countText);
-
-
-
+        count=0;
+        countText.setText(String.valueOf(count));
 
 //        SPRecord.add
         //按鍵初始化
@@ -544,15 +540,11 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 speed = 1000 - progress * 100;
             }
-
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
-
             }
-
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-
             }
         });
         //圖片設定初始化
@@ -632,6 +624,7 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
             //音樂播放
             uri = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.canon);
             mMediaPlayer = new MediaPlayer();
+            mMediaPlayer.setLooping(true);
         }
         //Handler處理
         {handler=new Handler(){
@@ -661,7 +654,7 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
             if(s.getPointX()==TempPoint.getPointX() && s.getPointY()==TempPoint.getPointY()){
 
                 alive=false;
-                Log.d("死因","吃到自己");
+                Log.d("死因","吃到自己"+"目前方向"+DIRECTION);
                 break;
             }
         }
