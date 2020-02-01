@@ -83,8 +83,6 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
                 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
         };
 
-    private ArrayList<Record>SPRecord;
-
     //音樂
     public MediaPlayer mMediaPlayer = null;
     int state;
@@ -112,32 +110,23 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
     }
     @Override
     public void onCompletion(MediaPlayer mp) {
-
+    //如果不是循環撥放,再想這要用甚麼好了
     }
     @Override
     protected void onResume() {
         super.onResume();
-        view.invalidate();
-        mMediaPlayer = new MediaPlayer();
-        mMediaPlayer.setLooping(true);
         Log.d("onResume","onResume");
+        seekBar.setProgress(speed/100-1);
+        Log.d("SPEED",String.valueOf(speed));
 
-        try {
-            mMediaPlayer.setDataSource(this, uri);
-            state=ready;
-        } catch (Exception e) {
-            Toast.makeText(MainActivity.this, "指定的音樂檔錯誤！", Toast.LENGTH_LONG)
-                    .show();
-        }
+        view.invalidate();
 
-        mMediaPlayer.setOnPreparedListener(this);
-        mMediaPlayer.setOnErrorListener(this);
-        mMediaPlayer.setOnCompletionListener(this);
     }
     @Override
     public boolean onError(MediaPlayer mp, int what, int extra) {
         mMediaPlayer.release();
         state=error;
+
         Toast.makeText(MainActivity.this, "發生錯誤，停止播放", Toast.LENGTH_LONG)
                 .show();
         return true;
@@ -145,10 +134,13 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
     @Override
     protected void onStop() {
         super.onStop();
-        state=stop;
         Log.d("onStop","onStop");
-        mMediaPlayer.release();
-        mMediaPlayer = null;
+        Pause();
+//        state=stop;
+//        //mMediaPlayer.reset();
+//        mMediaPlayer.release();
+//        mbIsInitialised = true;
+//        mMediaPlayer = null;
     }
 
     public class DrawView extends View{
@@ -194,14 +186,13 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         init();
-        threadAnime=new Thread(new AnimationThread());
-        threadAnime.start();
+
         actionBar=getSupportActionBar();
         actionBar.hide();
     }
     private class AnimationThread extends Thread {
         public void run(){
-            while(run!=null) {
+            while(state!=stop) {
                 if(run==true){
                 SnackReset();
                 allowChange=true;
@@ -396,8 +387,9 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
                     break;
                 case R.id.TEST:
                      Pause();
-                    mMediaPlayer.release();
-                    mbIsInitialised = true;
+//                     mMediaPlayer.stop();
+//                    mMediaPlayer.release();
+//                    mbIsInitialised = true;
 
                     Name = PN;
                     Log.d("Name",Name);
@@ -427,10 +419,8 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
                             mbIsInitialised=false;
                         }else{
                             mMediaPlayer.start();}
-
-
                     } else{ Pause();
-                    mMediaPlayer.pause();
+
                     }
                     break;
             }
@@ -440,6 +430,8 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
             PressPause.setBackgroundResource(android.R.drawable.ic_media_play);
             run=false;
             state=pause;
+            mMediaPlayer.pause();
+
     }
     //方向與按鈕事件設定
     View.OnClickListener ArrowListener=new View.OnClickListener() {
@@ -483,25 +475,8 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
     };
     //初始化
     private void init() {
-        //VL=(LinearLayout) findViewById(R.id.VL);
         PlayerName = (TextView) findViewById(R.id.PlayerName);
         SP=getSharedPreferences("GR",MODE_PRIVATE);
-        {//        SharedPreferences SP[]=new SharedPreferences[3];
-//        SPRecord=new ArrayList<>();
-//        for(int i=0;i<3;i++){
-//            SP[i]=getSharedPreferences("GR"+i,MODE_PRIVATE);
-//            String name = SP[i].getString("Name","PlayerName");
-//            String record=SP[i].getString("Record","0");
-//            String snack=SP[i].getString("Snack","1/1;2/1;3/1;4/1;5/1");
-//            String coin=SP[i].getString("Coin",1+rnd.nextInt(15)+"/"+1+rnd.nextInt(15));
-//            int direction=SP[i].getInt("Direction",1);//預設1為向右
-//
-//            Record R=new Record(name,record,snack,coin,direction);
-//            SPRecord.add(R);
-//        }
-        }
-
-//        PN = SP0.getString("Name", "PlayerName");
         int x,y;
         x=1+rnd.nextInt(15);
         y=1+rnd.nextInt(15);
@@ -512,7 +487,6 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
         count=0;
         countText.setText(String.valueOf(count));
 
-//        SPRecord.add
         //按鍵初始化
         {   btn_test=(Button)findViewById(R.id.TEST);
             btn_test.setOnClickListener(btnListener);
@@ -539,6 +513,7 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 speed = 1000 - progress * 100;
+                Log.d("SPEED",String.valueOf(speed));
             }
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
@@ -625,6 +600,24 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
             uri = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.canon);
             mMediaPlayer = new MediaPlayer();
             mMediaPlayer.setLooping(true);
+
+//            mMediaPlayer = new MediaPlayer();
+//            mMediaPlayer.setLooping(true);
+
+
+            try {
+                mMediaPlayer.setDataSource(this, uri);
+                state=ready;
+            } catch (Exception e) {
+                Toast.makeText(MainActivity.this, "指定的音樂檔錯誤！", Toast.LENGTH_LONG)
+                        .show();
+            }
+
+            mMediaPlayer.setOnPreparedListener(this);
+            mMediaPlayer.setOnErrorListener(this);
+            mMediaPlayer.setOnCompletionListener(this);
+            threadAnime=new Thread(new AnimationThread());
+            threadAnime.start();
         }
         //Handler處理
         {handler=new Handler(){
