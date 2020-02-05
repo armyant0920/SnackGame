@@ -12,7 +12,7 @@
         android:id="@+id/textView2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="你家裡蹲太久了,快去賺錢!"
+        android:text="你死了!"
         android:textColor="@android:color/holo_red_dark"
         android:textSize="28sp" />
 
@@ -28,13 +28,13 @@
                 android:id="@+id/btn_back"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="好!我要再去打拼" />
+                android:text="重新" />
 
             <Button
-                android:id="@+id/button4"
+                android:id="@+id/btn_continue"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="我連點都懶,繼續耍廢" />
+                android:text="讀檔" />
         </TableRow>
 
     </TableLayout>

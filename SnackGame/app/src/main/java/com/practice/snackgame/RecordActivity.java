@@ -35,12 +35,23 @@ public class RecordActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_record);
+        //按鈕設定
+        btn_back=(Button)findViewById(R.id.btn_back);
+        btn_back.setOnClickListener(btnListener);
+        btn_save=(Button)findViewById(R.id.btn_save);
+        btn_save.setOnClickListener(btnListener);
+        btn_load=(Button)findViewById(R.id.btn_load);
+        btn_load.setOnClickListener(btnListener);
+
         bundle=getIntent().getExtras();
-        Name=bundle.getString("Name");
+        if(bundle!=null) {
+            btn_save.setVisibility(View.VISIBLE);
+            Name=bundle.getString("Name");
         Score=bundle.getString("Score");
         Coin=bundle.getString("Coin");
         Snack=bundle.getString("Snack");
-        Direction=bundle.getInt("Direction");
+        Direction=bundle.getInt("Direction");}
+        else{btn_save.setVisibility(View.INVISIBLE);}
 
 
         for(int i=0;i<SP.length;i++){
@@ -62,13 +73,8 @@ public class RecordActivity extends AppCompatActivity {
         mRecyclerView.setLayoutManager(layoutManager);
         adapter = new RecordAdapter(this, datas);
         mRecyclerView.setAdapter(adapter);
-       // mRecyclerView.setOnClickListener(btnListener);
-        btn_back=(Button)findViewById(R.id.btn_back);
-        btn_back.setOnClickListener(btnListener);
-        btn_save=(Button)findViewById(R.id.btn_save);
-        btn_save.setOnClickListener(btnListener);
-        btn_load=(Button)findViewById(R.id.btn_load);
-        btn_load.setOnClickListener(btnListener);
+
+
 
 
         }
@@ -119,6 +125,7 @@ public class RecordActivity extends AppCompatActivity {
 
     private void save(){
         Record r=datas.get(pickPosition);
+
         r.setPlayerName(Name);
         r.setPlayerRecord(Score);
         r.setCoinPoint(Coin);

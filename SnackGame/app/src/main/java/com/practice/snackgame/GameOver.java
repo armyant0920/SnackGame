@@ -19,8 +19,9 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class GameOver extends AppCompatActivity {
-    Button btn_back;
-
+    Bundle bundle;
+    Button btn_back,btn_continue;
+    String Name,Score,Snack,Coin,Direction,BS;
 //    ActivityManager manager=(ActivityManager) context
 //            .getSystemService(Context.ACTIVITY_SERVICE);
 
@@ -30,33 +31,47 @@ public class GameOver extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game_over);
         btn_back=(Button)findViewById(R.id.btn_back);
-        btn_back.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent=new Intent(GameOver.this,MainActivity.class);
-                startActivity(intent);
-                finish();
-            }
-        });
+        btn_continue=(Button)findViewById(R.id.btn_continue);
+        btn_back.setOnClickListener(listener);
+        btn_continue.setOnClickListener(listener);
+
+        bundle=getIntent().getExtras();
+        if(bundle!=null)
+        {   BS=bundle.getString("BS");
+
+            Name=bundle.getString("Name");
+            Score=bundle.getString("Score");
+            Coin=bundle.getString("Coin");
+            Snack=bundle.getString("Snack");
+            Direction=String.valueOf(bundle.getInt("Direction"));
+        Log.d("DieOn","Name:"+Name+"/"+"Score"+Score+"/"+"Coin:"+Coin+"/"+"Snack:"+Snack+"/"+"方向:"+Direction);
+        Log.d("getBS",BS);
+
+
+        }
         JSONObject j;
         JSONArray jsonArray;
+        String PlayerName="Kevin",Score="10",Coin="5/5";
+        String Snack[]={"15/1","15/2","15/3","15/4","15/5"};
+        int Direction=2;
+        SnackJson s=new SnackJson();
+        Log.d("JSONTEST",s.ConvertToJson(PlayerName,Score,Snack,Coin,Direction));
+
         try {
-            String tmp = "{\"Name\":\"PlayerName\",\"Record\":\"10\",\"Snack\":[\"789\",\"123\",\"456\"],\"Coin\":\"10/10\",\"Direction\":\"1\",\"id\":5}";
-
-            j = new JSONObject(tmp);
-            jsonArray=j.getJSONArray("Snack");
-
-            String name=j.getString("Name");
-            String score=j.getString("Record");
-            String snack=j.getString("Snack");
-            Log.d("Player",name+"/"+score+"/"+snack);
-            for(int i=0;i<jsonArray.length();i++){
-
-                Log.d("json",(String) jsonArray.get(i));
-            }
-
-
-
+           String tmp = BS;
+            s.ConvertToString(tmp);
+//            String tmp = s.ConvertToJson(PlayerName,Score,Snack,Coin,Direction);
+//            j = new JSONObject(tmp);
+//            jsonArray=j.getJSONArray("Snack");
+//
+//            String name=j.getString("Name");
+//            String score=j.getString("Score");
+//            String snack=j.getString("Snack");
+//            Log.d("Player",name+"/"+score+"/"+snack);
+//            for(int i=0;i<jsonArray.length();i++){
+//
+//                Log.d("json",(String) jsonArray.get(i));
+//            }
 
 
         } catch (Exception e) {
@@ -64,6 +79,26 @@ public class GameOver extends AppCompatActivity {
         }
 
     }
+    private View.OnClickListener listener=new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            Intent intent=new Intent();
+            Log.d("ApplicationContext",String.valueOf(getApplicationContext()));
+            Log.d("Application",String.valueOf(getApplication()));
+            switch (v.getId()){
+                case R.id.btn_back:
+                    intent.setClass(getApplicationContext(),MainActivity.class);
+                    break;
+                case R.id.btn_continue:
+                    intent.setClass(getApplicationContext(),RecordActivity.class);
+                    break;
+
+            }
+            startActivity(intent);
+            finish();
+
+        }
+    };
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {

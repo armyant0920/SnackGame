@@ -102,6 +102,7 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
 
     @Override
     public void onPrepared(MediaPlayer mediaPlayer) {
+        mbIsInitialised=false;
         mediaPlayer.seekTo(0);
         mediaPlayer.start();
         state=play;
@@ -116,9 +117,11 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
     protected void onResume() {
         super.onResume();
         Log.d("onResume","onResume");
-        seekBar.setProgress(speed/100-1);
-        Log.d("SPEED",String.valueOf(speed));
+        seekBar.setProgress((1000-speed)/100);
+        alive=true;
 
+        Log.d("SPEED",String.valueOf(1000-speed));
+        SetSound();
         view.invalidate();
 
     }
@@ -136,6 +139,7 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
         super.onStop();
         Log.d("onStop","onStop");
         Pause();
+        SoundRelease();
 //        state=stop;
 //        //mMediaPlayer.reset();
 //        mMediaPlayer.release();
@@ -176,7 +180,15 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
 
                 }
             }
-            for(SnackBody sb:SB){
+//            for(SnackBody sb:SB){
+//                canvas.drawBitmap(wilsion,sb.getPointX()*GS,sb.getPointY()*GS,p);
+//            }
+            for(int i=0;i<SB.size();i++){
+                SnackBody sb=SB.get(i);
+                if(i==SB.size()-1){
+                    p.setColor(Color.YELLOW);
+                    canvas.drawRect(sb.getPointX()*GS, sb.getPointY()*GS, (sb.getPointX()+1)*GS, (sb.getPointY()+1)*GS, p);
+                }
                 canvas.drawBitmap(wilsion,sb.getPointX()*GS,sb.getPointY()*GS,p);
             }
         }
@@ -240,7 +252,7 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
 
         //從SharedPreferences抓出上一次存過的資料
         txt_name.setText(getSharedPreferences("GR",MODE_PRIVATE).getString("Name","PlayerName"));
-        txt_record.setText(getSharedPreferences("GR",MODE_PRIVATE).getString("Record","0"));
+        txt_record.setText(getSharedPreferences("GR",MODE_PRIVATE).getString("Score","0"));
 
         recordlist.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -276,17 +288,17 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
                     public void onClick(DialogInterface dialog, int which) {
 
                         String name = txt_name.getText().toString();
-                        String record=txt_record.getText().toString();
+                        String score=txt_record.getText().toString();
 
                         if(SL=="save") {
-                            if (TextUtils.isEmpty(name) || TextUtils.isEmpty(record)) {
+                            if (TextUtils.isEmpty(name) || TextUtils.isEmpty(score)) {
                                 Toast.makeText(getApplicationContext(), "資料不全", Toast.LENGTH_SHORT).show();
                             } else {
-                                Toast.makeText(getApplicationContext(), "已將資料存入SP" + "\t" + name + "/" + record, Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getApplicationContext(), "已將資料存入SP" + "\t" + name + "/" + score, Toast.LENGTH_SHORT).show();
 
                                 SP.edit()
                                         .putString("Name", name)//紀錄玩家名稱
-                                        .putString("Record", record)//紀錄目前分數
+                                        .putString("Score", score)//紀錄目前分數
                                         .putString("Coin", CoinString)//紀錄目前金幣位置
                                         .putString("Snack", SnackString)//紀錄蛇身
                                         .putInt("Direction",DIRECTION)
@@ -297,7 +309,7 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
                             PN=SP.getString("Name","PlayerName");
 
                             PlayerName.setText(PN);
-                            count=Integer.parseInt(SP.getString("Record","0"));
+                            count=Integer.parseInt(SP.getString("Score","0"));
                             String CoinPoint[]=CoinString.split("/");
 
                             countText.setText(String.valueOf(count));
@@ -391,23 +403,11 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
 //                    mMediaPlayer.release();
 //                    mbIsInitialised = true;
 
-                    Name = PN;
-                    Log.d("Name",Name);
-
-                    Coin = MoneyPoint.getPointX() + "/" + MoneyPoint.getPointY();
-                    Snack = "";
-
-                    for (SnackBody s : SB) {
-                        Snack += s.getPointX() + "/" + s.getPointY() + ";";
-                    }
                     Intent i = new Intent(getApplicationContext(), RecordActivity.class);
-                    i.putExtra("Name", Name);
-                    i.putExtra("Score", String.valueOf(count));
-                    i.putExtra("Coin", Coin);
-                    i.putExtra("Snack", Snack);
-                    i.putExtra("Direction", DIRECTION);
+                    SaveExtra(i);
                     //mMediaPlayer.stop();
                     startActivity(i);
+
                     break;
                 case R.id.btn_pause:
                     if(run==false){
@@ -416,7 +416,7 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
                         state=play;
                         if(mbIsInitialised) {
                             mMediaPlayer.prepareAsync();
-                            mbIsInitialised=false;
+
                         }else{
                             mMediaPlayer.start();}
                     } else{ Pause();
@@ -426,11 +426,40 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
             }
         }
     };
+    private void SaveExtra(Intent i){
+
+
+        PN=PlayerName.getText().toString();
+        Name = PN;
+        Log.d("Name",Name);
+
+        Coin = MoneyPoint.getPointX() + "/" + MoneyPoint.getPointY();
+        Snack = "";
+
+        for (SnackBody s : SB) {
+            Snack += s.getPointX() + "/" + s.getPointY() + ";";
+        }
+        String Snack2[]=new String[SB.size()];
+        for(int j=0;j<SB.size();j++){
+            Snack2[j]=SB.get(j).getPointX()+"/"+SB.get(j).getPointY();
+        }
+        SnackJson snackJson=new SnackJson();
+
+        String BS=snackJson.ConvertToJson(Name,String.valueOf(count),Snack2,Coin,DIRECTION);
+        i.putExtra("BS",BS);
+        i.putExtra("Name", Name);
+        i.putExtra("Score", String.valueOf(count));
+        i.putExtra("Coin", Coin);
+        i.putExtra("Snack", Snack);
+        i.putExtra("Direction", DIRECTION);
+
+    }
     private void Pause(){
             PressPause.setBackgroundResource(android.R.drawable.ic_media_play);
             run=false;
-            state=pause;
-            mMediaPlayer.pause();
+            if(mMediaPlayer.isPlaying())
+            {state=pause;
+            mMediaPlayer.pause();}
 
     }
     //方向與按鈕事件設定
@@ -513,7 +542,7 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 speed = 1000 - progress * 100;
-                Log.d("SPEED",String.valueOf(speed));
+                Log.d("SPEED",String.valueOf((progress+1)*100));
             }
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
@@ -554,14 +583,14 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
         }
 
         //添加一個view到Layout中
-        LinearLayout layout = (LinearLayout) findViewById(R.id.root);
+        {LinearLayout layout = (LinearLayout) findViewById(R.id.root);
         view = new MainActivity.DrawView(this);// final GameMap.DrawView
         //這是畫布大小設定,先大概抓的,手機實際寬高單位不知道是甚麼,寬要到差不多2000才滿屏
         view.setMinimumHeight(2000);
         view.setMinimumWidth(600);
         //通知view组件重绘
         view.invalidate();
-        layout.addView(view);
+        layout.addView(view);}
 
         //初始化蛇身,放金幣
         {DIRECTION = RIGHT;
@@ -573,29 +602,8 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
             CreateMoney();
         }
 
-        //處理音樂
-        {//soundPool=new SoundPool(12, 0,5);
-            AudioAttributes audioAttributes = new AudioAttributes.Builder()
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .setUsage(AudioAttributes.USAGE_GAME)
-                    .build();
-            soundPool = new SoundPool.Builder()
-                    .setMaxStreams(100)
-                    .setAudioAttributes(audioAttributes)
-                    .build();
-            musicId.put("money", soundPool.load(this, R.raw.coin05, 1));//吃到錢
-            musicId.put("bump", soundPool.load(this, R.raw.surprise, 1));//撞牆
-            musicId.put("walk", soundPool.load(this, R.raw.button04a, 1));//走路聲音
-            musicId.put("die", soundPool.load(this, R.raw.powerdown07, 1));//吃到自己
-            soundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
-                @Override
-                public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
-                    Log.d("status", sampleId + String.valueOf(status));
-                    if (status == 0) {
-                        Log.d("load", musicId.get("money") + "讀取完成");
-                    }
-                }
-            });
+        //處理音效&音樂
+        {
             //音樂播放
             uri = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.canon);
             mMediaPlayer = new MediaPlayer();
@@ -603,7 +611,6 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
 
 //            mMediaPlayer = new MediaPlayer();
 //            mMediaPlayer.setLooping(true);
-
 
             try {
                 mMediaPlayer.setDataSource(this, uri);
@@ -626,6 +633,35 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
                 countText.setText(String.valueOf(count));
             }
         };}
+    }
+    //SoundPool資源載入
+    private void SetSound(){
+        //soundPool=new SoundPool(12, 0,5);
+        AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .setUsage(AudioAttributes.USAGE_GAME)
+                .build();
+        soundPool = new SoundPool.Builder()
+                .setMaxStreams(10)
+                .setAudioAttributes(audioAttributes)
+                .build();
+        musicId.put("money", soundPool.load(this, R.raw.coin05, 1));//吃到錢
+        musicId.put("bump", soundPool.load(this, R.raw.surprise, 1));//撞牆
+        musicId.put("walk", soundPool.load(this, R.raw.button04a, 1));//走路聲音
+        musicId.put("die", soundPool.load(this, R.raw.powerdown07, 1));//吃到自己
+        soundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
+            @Override
+            public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
+                Log.d("status", sampleId + String.valueOf(status));
+                if (status == 0) {
+                    Log.d("load", musicId.get("money") + "讀取完成");
+                }
+            }
+        });
+    }
+    private void SoundRelease(){
+        soundPool.release();
+        soundPool=null;
     }
     private void SnackReset() {
 
@@ -658,33 +694,37 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
             Log.d("死因","撞牆");
 
         }
+        //下一格是普通地板,那就去尾
         else if (map[TempPoint.getPointY()][TempPoint.getPointX()]==0){
-            SB.remove(0);//下一格是普通地板,那就去尾
-            //如果下一格是$,撥放音效並且不去尾
-        }else if(map[TempPoint.getPointY()][TempPoint.getPointX()]==2){
+            SB.remove(0);
+            SB.add(TempPoint);
+            for(int i=0;i<SB.size();i++){
+                Log.d("SNACK","X="+String.valueOf(SB.get(i).getPointX())+"Y="+String.valueOf(SB.get(i).getPointY()));
+            }
+
+
+        }
+        //如果下一格是$,撥放音效並且不去尾
+        else if(map[TempPoint.getPointY()][TempPoint.getPointX()]==2){
             map[MoneyPoint.getPointY()][MoneyPoint.getPointX()]=0;
+
             count++;
             soundPool.play(1,1,1,1,0,1);
 
             handler.sendEmptyMessage(count);
+            SB.add(TempPoint);
+            for(int i=0;i<SB.size();i++){
+                Log.d("SNACK","X="+String.valueOf(SB.get(i).getPointX())+"Y="+String.valueOf(SB.get(i).getPointY()));
+            }
             CreateMoney();
         }
-//        for (int i = 0; i < SB.size(); i++) {
-//          map[SB.get(i).getPointX()][SB.get(i).getPointY()]=2;
+
         if(alive==true){//如果活著,就執行:
-
-        SB.add(TempPoint);
-        for(int i=0;i<SB.size();i++){
-            Log.d("SNACK","X="+String.valueOf(SB.get(i).getPointX())+"Y="+String.valueOf(SB.get(i).getPointY()));
-
-            }
             soundPool.play(3,1,1,1,0,1);
         }else{run=false;//死掉,就執行
            Log.d("DEAD","GameOver");
             soundPool.play(4,1,1,1,0,1);
            jump();
-           finish();
-
         }
     }
 
@@ -713,8 +753,10 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
     }
     public void jump(){
         Intent intent=new Intent(MainActivity.this,GameOver.class);
+        SaveExtra(intent);
         startActivity(intent);
         finish();
+
 
     }
 
