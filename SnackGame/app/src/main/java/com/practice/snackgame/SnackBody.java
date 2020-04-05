@@ -1,12 +1,14 @@
 package com.practice.snackgame;
 
 public class SnackBody {
-    private int PointY;
     private int PointX;
+    private int PointY;
+
 
     public SnackBody(int pointX,int pointY) {
-        PointY = pointY;
         PointX = pointX;
+        PointY = pointY;
+
     }
 
     public int getPointX() {

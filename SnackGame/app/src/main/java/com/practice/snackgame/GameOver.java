@@ -49,13 +49,13 @@ public class GameOver extends AppCompatActivity {
 
 
         }
-        JSONObject j;
-        JSONArray jsonArray;
-        String PlayerName="Kevin",Score="10",Coin="5/5";
-        String Snack[]={"15/1","15/2","15/3","15/4","15/5"};
-        int Direction=2;
+//        JSONObject j;
+//        JSONArray jsonArray;
+//        String PlayerName="Kevin",Score="10",Coin="5/5";
+//        String Snack[]={"15/1","15/2","15/3","15/4","15/5"};
+//        int Direction=2;
         SnackJson s=new SnackJson();
-        Log.d("JSONTEST",s.ConvertToJson(PlayerName,Score,Snack,Coin,Direction));
+//        Log.d("JSONTEST",s.ConvertToJson(PlayerName,Score,Snack,Coin,Direction));
 
         try {
            String tmp = BS;

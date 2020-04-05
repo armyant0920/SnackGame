@@ -29,6 +29,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -42,7 +43,7 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
         MediaPlayer.OnCompletionListener {
     ActionBar actionBar;
 
-    final int GS=50,row=17,column=17;//撇除牆壁,實際可動範圍15*15=225
+    final int GS=50,row=18,column=18;//撇除牆壁,實際可動範圍15*15=225
     public static int count=0,speed=500;
     SeekBar seekBar;
     SharedPreferences SP;
@@ -50,7 +51,12 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
     Random rnd=new Random();
     String PN;
     Paint p=new Paint();
-    Boolean run=false,alive=true,allowChange=true;
+    Boolean run=false,alive=true,allowChange=true,mapReady=false;
+    Boolean test=true;//預計用boolean來做是否自動判斷
+
+
+
+
 
     private String SL;
     //為了方便控制記錄檔,宣告以下靜態變數(static)
@@ -59,29 +65,35 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
         public static DrawView view;
         public static String Name,Coin, Snack;
 
-        public static SnackBody MoneyPoint;
+        public static  SnackBody MoneyPoint;
         public static ArrayList<SnackBody> SB;
         public static Button PressNow;
         public static Button PressUP, PressRIGHT, PressDOWN, PressLEFT, PressPause, btn_name, btn_save, btn_load, btn_test;
-        public static int[][] map = {
-                {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-                {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-        };
+        public static Button Press[];
+        public static int[][] map;//
+
+
+
+
+//                {
+//                {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+//                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+//                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+//                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+//                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+//                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+//                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+//                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+//                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+//                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+//                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+//                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+//                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+//                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+//                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+//                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+//                {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+//                 };
 
     //音樂
     public MediaPlayer mMediaPlayer = null;
@@ -121,7 +133,9 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
         alive=true;
 
         Log.d("SPEED",String.valueOf(1000-speed));
+        if(test){speed=50;}
         SetSound();
+
         view.invalidate();
 
     }
@@ -140,11 +154,6 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
         Log.d("onStop","onStop");
         Pause();
         SoundRelease();
-//        state=stop;
-//        //mMediaPlayer.reset();
-//        mMediaPlayer.release();
-//        mbIsInitialised = true;
-//        mMediaPlayer = null;
     }
 
     public class DrawView extends View{
@@ -154,42 +163,48 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
         @Override
         protected void onDraw(Canvas canvas) {
             super.onDraw(canvas);
+            if (view != null && map!=null) {
+                SnackBody sb=SB.get(SB.size()-1);
+                int x=sb.getPointX();
+                int y=sb.getPointY();
+                p.setColor(Color.GRAY);
+                canvas.drawRect(0, 0, column * GS, row * GS, p);// 正方形
+                for (int i = 0; i < column; i++) {
 
-            p.setColor(Color.GRAY);
-            canvas.drawRect(0, 0, column*GS, row*GS, p);// 正方形
-            for (int i=0;i<column;i++) {
+                    for (int j = 0; j < row; j++) {
+                        p.setColor(Color.BLACK);
+                        p.setStrokeWidth(5.0f);
+                        canvas.drawLine(i * GS, j * GS, (i + 1) * GS, (j) * GS, p);//劃出方格線-橫線
+                        canvas.drawLine(i * GS, j * GS, (i) * GS, (j + 1) * GS, p);//劃出方格線-直線
 
-                for (int j = 0; j <row; j++) {
-                    p.setColor(Color.BLACK);
-                    p.setStrokeWidth(5.0f);
-                    canvas.drawLine(i*GS, j*GS, (i+1)*GS, (j)*GS, p);//劃出方格線-橫線
-                    canvas.drawLine(i*GS, j*GS, (i)*GS, (j+1)*GS, p);//劃出方格線-直線
+                        switch (map[j][i]) {
+                            case 1:
+                                p.setColor(Color.RED);
+                                canvas.drawRect(i * GS, j * GS, (i + 1) * GS, (j + 1) * GS, p);
+                                break;
+                            case 2:
+                                canvas.drawBitmap(money, i * GS, j * GS, p);
 
-                    switch(map[j][i])
-                    {
-                        case 1:
-                            p.setColor(Color.RED);
-                            canvas.drawRect(i*GS, j*GS, (i+1)*GS, (j+1)*GS, p);
-                            break;
-                        case 2:
-                            canvas.drawBitmap(money,i*GS,j*GS,p);
+                                //canvas.drawBitmap(money,(i-1)*GS,(j-1)*GS,p);
+                                break;
+                            case 3:
 
-                            //canvas.drawBitmap(money,(i-1)*GS,(j-1)*GS,p);
-                            break;
+                                if (x==i && y==j) {
+                                    p.setColor(Color.YELLOW);
+                                    canvas.drawRect(x * GS, y * GS, (x + 1) * GS, (y + 1) * GS, p);
+                                }
+
+                                canvas.drawBitmap(wilsion,i * GS, j * GS, p);
+
+
+                        }
+
                     }
-
                 }
-            }
 //            for(SnackBody sb:SB){
 //                canvas.drawBitmap(wilsion,sb.getPointX()*GS,sb.getPointY()*GS,p);
 //            }
-            for(int i=0;i<SB.size();i++){
-                SnackBody sb=SB.get(i);
-                if(i==SB.size()-1){
-                    p.setColor(Color.YELLOW);
-                    canvas.drawRect(sb.getPointX()*GS, sb.getPointY()*GS, (sb.getPointX()+1)*GS, (sb.getPointY()+1)*GS, p);
-                }
-                canvas.drawBitmap(wilsion,sb.getPointX()*GS,sb.getPointY()*GS,p);
+
             }
         }
     }
@@ -199,14 +214,19 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
         setContentView(R.layout.activity_main);
         init();
 
+
+
         actionBar=getSupportActionBar();
-        actionBar.hide();
+        if (!(actionBar == null)) {
+            actionBar.hide();
+        }
     }
     private class AnimationThread extends Thread {
         public void run(){
             while(state!=stop) {
-                if(run==true){
-                SnackReset();
+                if(run){
+                SnackReset(DIRECTION);
+                
                 allowChange=true;
                 view.invalidate();}
                 try{
@@ -305,7 +325,7 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
                                         .commit();
 
                             }
-                        }else if(SL=="load"){
+                        }else if(SL.equals("load")){
                             PN=SP.getString("Name","PlayerName");
 
                             PlayerName.setText(PN);
@@ -354,23 +374,7 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
                     }
                 })
                 .show();
-//        Dialog.getButton(DialogInterface.BUTTON_POSITIVE).setVisibility(View.GONE);
 
-//        AlertDialog.Builder dialog=new AlertDialog.Builder(this);
-//        dialog.setTitle("Test");
-//        dialog.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-//            @Override
-//            public void onClick(DialogInterface dialog, int which) {
-//
-//            }
-//        });
-
-//        dialog.setPositiveButton(new DialogInterface.OnClickListener() {
-//            @Override
-//            public void onClick(DialogInterface dialog, int which) {
-//
-//            }
-//        });
     }
 
     View.OnClickListener btnListener= new View.OnClickListener() {
@@ -399,13 +403,8 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
                     break;
                 case R.id.TEST:
                      Pause();
-//                     mMediaPlayer.stop();
-//                    mMediaPlayer.release();
-//                    mbIsInitialised = true;
-
                     Intent i = new Intent(getApplicationContext(), RecordActivity.class);
                     SaveExtra(i);
-                    //mMediaPlayer.stop();
                     startActivity(i);
 
                     break;
@@ -502,13 +501,29 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
             Log.d("DIRECTION",String.valueOf(DIRECTION));
         }
     };
+
+
+
     //初始化
     private void init() {
+        map=new int[row][column];
+        for(int i=0;i<map.length;i++) {
+            for(int j=0;j<map[i].length;j++){
+                if(i==0 ||i==map.length-1){
+                    map[i][j]=1;
+                }else if(j==0 || j==map[i].length-1){
+                    map[i][j]=1;
+                }
+            }
+
+        }
+
+        mapReady=true;
         PlayerName = (TextView) findViewById(R.id.PlayerName);
         SP=getSharedPreferences("GR",MODE_PRIVATE);
         int x,y;
-        x=1+rnd.nextInt(15);
-        y=1+rnd.nextInt(15);
+        x=1+rnd.nextInt(column-3);
+        y=1+rnd.nextInt(column-3);
         CoinString = SP.getString("Coin", x+"/"+y);
         PN=SP.getString("Name","PlayerName");
         PlayerName.setText(PN);
@@ -517,6 +532,7 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
         countText.setText(String.valueOf(count));
 
         //按鍵初始化
+        
         {   btn_test=(Button)findViewById(R.id.TEST);
             btn_test.setOnClickListener(btnListener);
             btn_name = (Button) findViewById(R.id.btn_name);
@@ -529,12 +545,25 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
             PressLEFT = (Button) findViewById(R.id.btn_left);
             PressRIGHT = (Button) findViewById(R.id.btn_right);
             PressDOWN = (Button) findViewById(R.id.btn_down);
+            Press=new Button[4];
+            Press[UP]=(Button) findViewById(R.id.btn_up);
+            Press[RIGHT]=(Button) findViewById(R.id.btn_right);
+            Press[DOWN]=(Button) findViewById(R.id.btn_down);
+            Press[LEFT]=(Button) findViewById(R.id.btn_left);
             PressPause = (Button) findViewById(R.id.btn_pause);
+            if(test==false){
             PressUP.setOnClickListener(ArrowListener);
             PressLEFT.setOnClickListener(ArrowListener);
             PressRIGHT.setOnClickListener(ArrowListener);
-            PressDOWN.setOnClickListener(ArrowListener);
+            PressDOWN.setOnClickListener(ArrowListener);}
             PressPause.setOnClickListener(btnListener);
+//            if(test==true){
+//                PressUP.setVisibility(View.GONE);
+//                PressLEFT.setVisibility(View.GONE);
+//                PressRIGHT.setVisibility(View.GONE);
+//                PressDOWN.setVisibility(View.GONE);
+//
+//            }
         }
         //調整速度seejbar
         seekBar = (SeekBar) findViewById(R.id.seekBar);
@@ -582,6 +611,18 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
             //本來覺得奇怪 為何wilson會有背景白色 後來才發現是自己蠢了,因為我沒有畫預設地板的底色阿XDDD
         }
 
+        //初始化蛇身,放金幣
+        {DIRECTION = RIGHT;
+            SB = new ArrayList<>();
+            for (int i = 1; i <= 5; i++) {
+                SnackBody snackBody = new SnackBody(i, 1);
+                Log.d("SNACK", "X=" + String.valueOf(snackBody.getPointX()) + "Y=" + String.valueOf(snackBody.getPointY()));
+                SB.add(snackBody);
+                map[1][i]=3;
+
+            }
+            CreateMoney();
+        }
         //添加一個view到Layout中
         {LinearLayout layout = (LinearLayout) findViewById(R.id.root);
         view = new MainActivity.DrawView(this);// final GameMap.DrawView
@@ -590,17 +631,11 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
         view.setMinimumWidth(600);
         //通知view组件重绘
         view.invalidate();
-        layout.addView(view);}
+        layout.addView(view);
 
-        //初始化蛇身,放金幣
-        {DIRECTION = RIGHT;
-            SB = new ArrayList<>();
-            for (int i = 1; i <= 5; i++) {
-                SnackBody snackBody = new SnackBody(i, 1);
-                Log.d("SNACK", "X=" + String.valueOf(snackBody.getPointX()) + "Y=" + String.valueOf(snackBody.getPointY()));
-                SB.add(snackBody); }
-            CreateMoney();
         }
+
+
 
         //處理音效&音樂
         {
@@ -608,9 +643,6 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
             uri = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.canon);
             mMediaPlayer = new MediaPlayer();
             mMediaPlayer.setLooping(true);
-
-//            mMediaPlayer = new MediaPlayer();
-//            mMediaPlayer.setLooping(true);
 
             try {
                 mMediaPlayer.setDataSource(this, uri);
@@ -663,8 +695,8 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
         soundPool.release();
         soundPool=null;
     }
-    private void SnackReset() {
-
+    private void SnackReset(int DIRECTION) {
+        //準備把碰撞邏輯分出去
         SnackBody TempPoint=SB.get(SB.size()-1);
         if(DIRECTION==UP){
             TempPoint=new SnackBody(TempPoint.getPointX(),TempPoint.getPointY()-1);
@@ -677,88 +709,207 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnPre
         else if (DIRECTION==RIGHT){
             TempPoint=new SnackBody(TempPoint.getPointX()+1,TempPoint.getPointY());
         }
-        Log.d("TempPoint","X:"+String.valueOf(TempPoint.getPointX())+"Y:"+String.valueOf(TempPoint.getPointY()));
-
-        for(SnackBody s:SB){//如果下一動會吃到自己,死掉
-            if(s.getPointX()==TempPoint.getPointX() && s.getPointY()==TempPoint.getPointY()){
-
-                alive=false;
-                Log.d("死因","吃到自己"+"目前方向"+DIRECTION);
-                break;
-            }
+        //Log.d("TempPoint","X:"+String.valueOf(TempPoint.getPointX())+"Y:"+String.valueOf(TempPoint.getPointY()));
+        if(test){
+        TempPoint=StupidMove(TempPoint);}
+        MoveResult(TempPoint);
+        
+        
+    }
+    
+    private void MoveResult(SnackBody temp){
+        int x=temp.getPointX();
+        int y=temp.getPointY();
+//        for(SnackBody s:SB){//如果下一動會吃到自己,死掉
+//            if(s.getPointX()==temp.getPointX() && s.getPointY()==temp.getPointY()){
+//
+//                alive=false;
+//                Log.d("死因","吃到自己"+"目前方向"+DIRECTION);
+//                break;
+//            }
+//        }
+        if(map[y][x]==3) {
+            alive = false;
+            Log.d("死因", "吃到自己" + "目前方向" + DIRECTION);
         }
         //判斷下一格是甚麼
-        if(map[TempPoint.getPointY()][TempPoint.getPointX()]==1){//碰到牆壁,死掉
+        if(map[y][x]==1){//碰到牆壁,死掉
             alive=false;
             soundPool.play(2,1,1,1,0,1);
             Log.d("死因","撞牆");
 
         }
         //下一格是普通地板,那就去尾
-        else if (map[TempPoint.getPointY()][TempPoint.getPointX()]==0){
+        else if (map[y][x]==0){
+            SnackBody sb=SB.get(0);
+            map[sb.getPointY()][sb.getPointX()]=0;
             SB.remove(0);
-            SB.add(TempPoint);
-            for(int i=0;i<SB.size();i++){
-                Log.d("SNACK","X="+String.valueOf(SB.get(i).getPointX())+"Y="+String.valueOf(SB.get(i).getPointY()));
-            }
-
-
+            SB.add(temp);
+            SnackGroup();
+//            for(int i=0;i<SB.size();i++){
+//                Log.d("SNACK","X="+String.valueOf(SB.get(i).getPointX())+"Y="+String.valueOf(SB.get(i).getPointY()));
+//            }
         }
         //如果下一格是$,撥放音效並且不去尾
-        else if(map[TempPoint.getPointY()][TempPoint.getPointX()]==2){
+        else if(map[temp.getPointY()][temp.getPointX()]==2){
             map[MoneyPoint.getPointY()][MoneyPoint.getPointX()]=0;
 
             count++;
             soundPool.play(1,1,1,1,0,1);
 
             handler.sendEmptyMessage(count);
-            SB.add(TempPoint);
-            for(int i=0;i<SB.size();i++){
-                Log.d("SNACK","X="+String.valueOf(SB.get(i).getPointX())+"Y="+String.valueOf(SB.get(i).getPointY()));
-            }
+            SB.add(temp);
+//            for(int i=0;i<SB.size();i++){
+//                Log.d("SNACK","X="+String.valueOf(SB.get(i).getPointX())+"Y="+String.valueOf(SB.get(i).getPointY()));
+//            }
+            SnackGroup();
             CreateMoney();
         }
 
         if(alive==true){//如果活著,就執行:
             soundPool.play(3,1,1,1,0,1);
+
         }else{run=false;//死掉,就執行
-           Log.d("DEAD","GameOver");
+            Log.d("DEAD","GameOver");
             soundPool.play(4,1,1,1,0,1);
-           jump();
+            jump();
         }
+        
     }
 
-    private void CreateMoney(){
-        if(MoneyPoint!=null)
-        {map[MoneyPoint.getPointY()][MoneyPoint.getPointX()]=0;}
-        MoneyPoint=new SnackBody((1+rnd.nextInt(15)),(1+rnd.nextInt(15)));
-        Log.d("MoneyPoint","X:"+String.valueOf(MoneyPoint.getPointX())+"Y:"+String.valueOf(MoneyPoint.getPointY()));
-        for(SnackBody s:SB){
-            if(s.getPointX()==MoneyPoint.getPointX() && s.getPointY()==MoneyPoint.getPointY()){
+    private void SnackGroup(){
+
+        for (int i = 0; i < SB.size(); i++) {
+
+            SnackBody sb = SB.get(i);
+            int x=sb.getPointX();
+            int y=sb.getPointY();
+            map[sb.getPointY()][sb.getPointX()]=3;
+
+        }
+
+    }
+
+    private synchronized void  CreateMoney(){
+        //當後面空格幾乎用光時,有必要等計算路徑完再執行線程
+       state=pause;
+        if(MoneyPoint==null) {
+            MoneyPoint=new SnackBody(1+rnd.nextInt(column-3),1+rnd.nextInt(row-3));
+
+        }else{
+            MoneyPoint.setPointX(1+rnd.nextInt(column-3));
+            MoneyPoint.setPointY(1+rnd.nextInt(row-3));
+        }
+        if(CheckMoney(MoneyPoint)){
+            int x=MoneyPoint.getPointX();
+            int y=MoneyPoint.getPointY();
+            map[y][x]=2;
+            Log.d("MoneyPoint","Created_"+"X:"+x+"Y:"+y);
+            state=play;
+            } else {
                 CreateMoney();
-                Log.d("Money","Retry");
-                break;
             }
-            else{
+    }
 
 
+        private boolean CheckMoney(SnackBody money){
+        int x=money.getPointX();
+        int y=money.getPointY();
+            if(map[y][x]==3){
+                Log.d("MoneyRetry at",x+"/"+y);
+                return false;
+            }else {
+                return  true;
             }
         }
-        Log.d("MoneyOri",String.valueOf(map[MoneyPoint.getPointY()][MoneyPoint.getPointX()]));
-        map[MoneyPoint.getPointY()][MoneyPoint.getPointX()]=2;
-        Log.d("Money",String.valueOf(map[MoneyPoint.getPointY()][MoneyPoint.getPointX()]));
-        Log.d("Money","Created");
-
-
-    }
     public void jump(){
         Intent intent=new Intent(MainActivity.this,GameOver.class);
         SaveExtra(intent);
         startActivity(intent);
         finish();
 
+    }
+    //固定路徑,從左上角開始.跑到右方邊界後往下1反向折返直到左邊界-1~循環到下邊界-1時,跑回最左邊往上回到原點,重新循環(此方法因為要來回,只能用在偶數)
+    //每次線程執行一次,這種方法只要知道蛇頭在哪,目前方向就行了
+    private SnackBody StupidMove(SnackBody temp) {
+        SnackBody TempPoint = SB.get(SB.size() - 1);
+        if (DIRECTION == RIGHT) {//方向往右時
+            if (temp.getPointX() < column - 1) {//還沒要碰到牆,就繼續
+
+            } else {//要碰到牆了
+                temp.setPointX(temp.getPointX() - 1);
+                temp.setPointY(temp.getPointY() + 1);
+                DIRECTION = DOWN;
+
+            }
+
+        } else if (DIRECTION == DOWN) {//方向往下時
+            if (temp.getPointX() == 2) {//在左邊,切往右邊
+                temp.setPointX(temp.getPointX() + 1);
+
+                DIRECTION = RIGHT;
+            } else if (temp.getPointX() == column - 2) {//在右邊,切往左邊
+                temp.setPointX(temp.getPointX() - 1);
+                DIRECTION = LEFT;
+            }
+            temp.setPointY(temp.getPointY() - 1);
+
+
+        } else if (DIRECTION == LEFT) {
+            if (temp.getPointY() != row - 2) {//如果不是在最後一列
+                if (temp.getPointX() > 1) {//只能走到逃生走道右邊1格
+
+                } else {//要碰到走道了,往下走
+                    temp.setPointX(temp.getPointX() + 1);
+                    temp.setPointY(temp.getPointY() + 1);
+                    DIRECTION = DOWN;
+                }
+            } else if (temp.getPointX() >= 1) {//最後一列,在撞到牆前一直往左
+            } else {
+                temp.setPointX(temp.getPointX() + 1);
+                temp.setPointY(temp.getPointY() - 1);//開始往上爬
+                DIRECTION = UP;
+
+
+            }
+        } else if (DIRECTION == UP) {//方向往上時
+            if (temp.getPointY()>0) {//撞到第一行的牆壁前,繼續往上
+
+            } else {//回到第一列了,開始往右 重新循環
+                temp.setPointX(temp.getPointX() + 1);
+                temp.setPointY(temp.getPointY() + 1);
+                DIRECTION = RIGHT;
+            }
+
+        }
+        PressColor(DIRECTION);
+        return temp;
+    }
+
+    private void PressColor(int Direction){
+        if(PressNow!=null) {
+            PressNow.setBackgroundTintMode(PorterDuff.Mode.MULTIPLY);
+        }
+        PressNow=Press[Direction];
+        PressNow.setBackgroundTintMode(PorterDuff.Mode.SRC_ATOP);//OVERALY或XOR也不錯
 
     }
+    //找路
+    private void FindPath(){
+
+      //1.取得蛇身,金幣目前所在位置..
+      //2.找出蛇身到金幣
+      //3.找到金幣後,回到尾巴
+      //2.3不符合,則往離金幣最遠的位置移動一格
+
+      SnackBody TempPoint;
+      for(int i=0;i<4;i++){
+
+
+      }
+
+    }
+
 
 }
 

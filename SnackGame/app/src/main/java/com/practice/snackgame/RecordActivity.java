@@ -59,8 +59,8 @@ public class RecordActivity extends AppCompatActivity {
             String name = SP[i].getString("Name","PlayerName");
             String record=SP[i].getString("Record","0");
             String snack=SP[i].getString("Snack","1/1;2/1;3/1;4/1;5/1");
-            int x=1+rnd.nextInt(15);
-            int y=1+rnd.nextInt(15);
+            int x=1+rnd.nextInt(16);
+            int y=1+rnd.nextInt(16);
             String coin=SP[i].getString("Coin",x+"/"+y);
             Log.d("coinInit",coin);
             int direction=SP[i].getInt("Direction",1);//預設1為向右
@@ -86,6 +86,7 @@ public class RecordActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Log.d("pick",String.valueOf(adapter.getPosition()));
                 table_pick=adapter.getTable();
+
                 pickPosition=adapter.getPosition();
 
                 Intent i=new Intent(getApplicationContext(),MainActivity.class);

@@ -33,7 +33,7 @@ public class SnackJson {
 
         try {
             j = new JSONObject(s);
-            SnackArray=j.getJSONArray("Snack");
+            //SnackArray=j.getJSONArray("Snack");//因為Snack(蛇身)是多個xy,故要設一個array節點
             String name=j.getString("Name");
             String score=j.getString("Score");
             String snack=j.getString("Snack");
